@@ -29,12 +29,14 @@ examples:
   python -m notion2mnemo --database 1234abcd... --db-properties none
 
   python -m notion2mnemo push notes.mnemo --parent https://www.notion.so/Imports-...
+  python -m notion2mnemo gui
 
 then, in Mnemo: Notes -> Import -> pick the .mnemo file.
 
 subcommands:
   pull   Notion -> .mnemo (the default when no subcommand is given)
   push   .mnemo -> Notion (creates real pages under --parent)
+  gui    open the graphical app
 """
 
 
@@ -208,6 +210,10 @@ def main(argv: list[str] | None = None) -> int:
     # A bare invocation means pull.
     if argv and argv[0] == "push":
         return run_push(argv[1:])
+    if argv and argv[0] == "gui":
+        from .gui.app import run_gui
+
+        return run_gui()
     if argv and argv[0] == "pull":
         argv = argv[1:]
 

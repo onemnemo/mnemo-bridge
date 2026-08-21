@@ -1,0 +1,13 @@
+-r requirements.txt
+pywebview>=5.0
+# Linux has no built-in web view a Python app can borrow the way Windows
+# (WebView2) and macOS (WebKit) do; Qt WebEngine is the one that packages
+# cleanly, wheels and all.
+pywebview[qt]>=5.0; sys_platform == "linux"
+pillow>=10.0
+# Keeps the Notion key in the system keychain rather than a plain file. The
+# app falls back to the file where no keychain is available.
+keyring>=24
+# Self-update for the packaged app. Optional: the GUI runs without it and
+# simply never offers an update.
+velopack>=1.2
