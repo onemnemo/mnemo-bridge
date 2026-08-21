@@ -28,11 +28,13 @@ examples:
   python -m notion2mnemo --page https://www.notion.so/My-Page-abc123... --covers
   python -m notion2mnemo --database 1234abcd... --db-properties none
 
+  python -m notion2mnemo push notes.mnemo --parent https://www.notion.so/Imports-...
 
 then, in Mnemo: Notes -> Import -> pick the .mnemo file.
 
 subcommands:
   pull   Notion -> .mnemo (the default when no subcommand is given)
+  push   .mnemo -> Notion (creates real pages under --parent)
 """
 
 
@@ -137,10 +139,75 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def build_push_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(
+        prog="notion2mnemo push",
+        description="Write a .mnemo package into Notion as real pages.",
+    )
+    parser.add_argument("package", help="the .mnemo file to push")
+    parser.add_argument(
+        "--parent",
+        required=True,
+        metavar="ID_OR_URL",
+        help="the Notion page the imported pages are created under. "
+        "The integration must be connected to it.",
+    )
+    parser.add_argument(
+        "--no-images",
+        action="store_true",
+        help="skip uploading images (image blocks become placeholder text).",
+    )
+    parser.add_argument("--limit", type=int, metavar="N", help="push at most N notes.")
+    parser.add_argument("--token", default=os.environ.get("NOTION_TOKEN", ""))
+    parser.add_argument("--notion-version", default=DEFAULT_VERSION, metavar="YYYY-MM-DD")
+    parser.add_argument("--rate", type=float, default=2.5, metavar="RPS")
+    parser.add_argument("-q", "--quiet", action="store_true")
+    return parser
+
+
+def run_push(argv: list[str]) -> int:
+    from .push import NotionWriter, PushOptions
+    from .walker import normalize_id
+
+    args = build_push_parser().parse_args(argv)
+    if not args.token:
+        print("No Notion token. Set NOTION_TOKEN or pass --token.", file=sys.stderr)
+        return 2
+    if not Path(args.package).exists():
+        print(f"'{args.package}' does not exist.", file=sys.stderr)
+        return 2
+
+    # No cache: a cached read of a block this run just wrote would be stale.
+    client = NotionClient(args.token, version=args.notion_version, requests_per_second=args.rate)
+    writer = NotionWriter(
+        client,
+        options=PushOptions(upload_images=not args.no_images, limit=args.limit),
+        progress=(lambda m: None) if args.quiet else (lambda m: print(m, flush=True)),
+    )
+    try:
+        result = writer.push_package(args.package, normalize_id(args.parent))
+    except NotionError as exc:
+        print(f"Notion API error: {exc}", file=sys.stderr)
+        return 1
+    except KeyboardInterrupt:
+        print("\nInterrupted. Pages already created remain in Notion.", file=sys.stderr)
+        return 130
+
+    print(
+        f"\nCreated {result.pages_created} page(s), {result.blocks_written} block(s), "
+        f"{result.images_uploaded} image(s) uploaded."
+    )
+    for warning in result.warnings:
+        print(f"  warning: {warning}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     argv = list(sys.argv[1:] if argv is None else argv)
 
     # A bare invocation means pull.
+    if argv and argv[0] == "push":
+        return run_push(argv[1:])
     if argv and argv[0] == "pull":
         argv = argv[1:]
 
