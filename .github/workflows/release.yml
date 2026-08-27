@@ -1,0 +1,334 @@
+# Builds the app on Windows, macOS and Linux and publishes one GitHub release.
+#
+#   git tag v1.2.0 && git push origin v1.2.0
+#
+# The tag must match notion2mnemo.__version__. Each installed app reads its own
+# feed (releases.win.json, releases.osx.json, releases.linux.json) off the
+# release, so publishing it is what ships an update.
+#
+# macOS is signed and notarized when the MACOS_* and APPLE_API_* secrets are
+# available (the same ones Mnemo uses). Without them it ships as an unsigned
+# .app in a zip, which does not update itself.
+#
+# A manual run with "publish" off builds and tests all three without releasing.
+
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version to build, without the leading v (e.g. 1.2.0)"
+        required: true
+      publish:
+        description: "Publish a release (off: build and test only)"
+        type: boolean
+        default: true
+
+permissions:
+  contents: write
+
+env:
+  PACK_ID: NotionMnemoConverter
+  PACK_TITLE: Notion to Mnemo Converter
+
+jobs:
+  build:
+    name: Build (${{ matrix.channel }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            channel: win
+          # Apple Silicon only. Intel Macs would need their own build and channel.
+          - os: macos-14
+            channel: osx
+          # The oldest supported Ubuntu, so the AppImage runs on older glibc versions.
+          - os: ubuntu-22.04
+            channel: linux
+    runs-on: ${{ matrix.os }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Read the version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Install the Qt WebEngine libraries (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y xvfb libegl1 libgl1 libnss3 libxkbcommon-x11-0 \
+            libxcb-cursor0 libxcb-icccm4 libxcb-image0 libxcb-keysyms1 libxcb-randr0 \
+            libxcb-render-util0 libxcb-shape0 libxcb-xinerama0 libxcomposite1 \
+            libxdamage1 libxrandr2 libxtst6 libxkbfile1 libasound2 libdbus-1-3 \
+            libfontconfig1
+
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Check the tag matches the version
+        shell: bash
+        run: |
+          declared=$(python -c "import notion2mnemo; print(notion2mnemo.__version__)")
+          if [ "$declared" != "${{ steps.version.outputs.version }}" ]; then
+            echo "::error::The tag says ${{ steps.version.outputs.version }} but notion2mnemo/__init__.py says $declared."
+            exit 1
+          fi
+
+      - name: Test
+        run: python -m unittest discover -s tests -t .
+
+      - name: Build
+        run: pyinstaller notion2mnemo.spec --noconfirm
+
+      # Starts the built app hidden, waits for the page to load, and exits.
+      - name: Smoke test the built app
+        shell: bash
+        env:
+          NOTION2MNEMO_SMOKE: "1"
+          # Chromium's sandbox needs privileges the CI container doesn't have.
+          QTWEBENGINE_DISABLE_SANDBOX: "1"
+        run: |
+          case "${{ matrix.channel }}" in
+            win)   app=./dist/NotionMnemoConverter/NotionMnemoConverter.exe ;;
+            osx)   app=./dist/NotionMnemoConverter.app/Contents/MacOS/NotionMnemoConverter ;;
+            linux) app="xvfb-run -a ./dist/NotionMnemoConverter/NotionMnemoConverter" ;;
+          esac
+          output=$($app 2>&1 || true)
+          echo "$output"
+          case "$output" in
+            *"SMOKE ready=True"*) ;;
+            *) echo "::error::The built app did not start."; exit 1 ;;
+          esac
+
+      - name: Write the release notes
+        shell: bash
+        run: |
+          prev=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || true)
+          git log --no-merges --pretty='- %s' ${prev:+$prev..}HEAD > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk
+
+      - name: Pack (Windows)
+        if: runner.os == 'Windows'
+        run: >
+          vpk pack --packId ${{ env.PACK_ID }} --packTitle "${{ env.PACK_TITLE }}" --packAuthors Mnemo
+          --packVersion ${{ steps.version.outputs.version }}
+          --packDir dist/NotionMnemoConverter --mainExe NotionMnemoConverter.exe
+          --icon assets/icon.ico --framework webview2
+          --releaseNotes RELEASE_NOTES.md --outputDir Releases
+
+      - name: Pack (Linux)
+        if: runner.os == 'Linux'
+        run: >
+          vpk pack --packId ${{ env.PACK_ID }} --packTitle "${{ env.PACK_TITLE }}" --packAuthors Mnemo
+          --packVersion ${{ steps.version.outputs.version }}
+          --packDir dist/NotionMnemoConverter --mainExe NotionMnemoConverter
+          --icon assets/icon.png
+          --releaseNotes RELEASE_NOTES.md --outputDir Releases
+
+      # Loads the Developer ID certificates into a throwaway keychain and stores the
+      # notary credentials in it. Without MACOS_APP_CERT_P12 this does nothing.
+      - name: Set up macOS signing
+        id: macsign
+        if: runner.os == 'macOS'
+        shell: bash
+        env:
+          MACOS_APP_CERT_P12: ${{ secrets.MACOS_APP_CERT_P12 }}
+          MACOS_INSTALLER_CERT_P12: ${{ secrets.MACOS_INSTALLER_CERT_P12 }}
+          MACOS_CERT_PASSWORD: ${{ secrets.MACOS_CERT_PASSWORD }}
+          APPLE_API_KEY_ID: ${{ secrets.APPLE_API_KEY_ID }}
+          APPLE_API_ISSUER: ${{ secrets.APPLE_API_ISSUER }}
+          APPLE_API_KEY_P8: ${{ secrets.APPLE_API_KEY_P8 }}
+        run: |
+          set -euo pipefail
+          if [ -z "$MACOS_APP_CERT_P12" ]; then
+            echo "::warning::MACOS_APP_CERT_P12 is not set, so the macOS build is unsigned."
+            exit 0
+          fi
+          for name in MACOS_INSTALLER_CERT_P12 MACOS_CERT_PASSWORD APPLE_API_KEY_ID APPLE_API_ISSUER APPLE_API_KEY_P8; do
+            if [ -z "${!name}" ]; then
+              echo "::error::$name is not set, and signing needs it alongside MACOS_APP_CERT_P12."
+              exit 1
+            fi
+          done
+          kc="$RUNNER_TEMP/signing.keychain-db"
+          kcpass="$(uuidgen)"
+          security create-keychain -p "$kcpass" "$kc"
+          echo "keychain=$kc" >> "$GITHUB_OUTPUT"
+          # Notarization can take a while. Keep the keychain unlocked for the whole job.
+          security set-keychain-settings -lut 21600 "$kc"
+          security unlock-keychain -p "$kcpass" "$kc"
+          for p12 in "$MACOS_APP_CERT_P12" "$MACOS_INSTALLER_CERT_P12"; do
+            printf '%s' "$p12" | base64 --decode > "$RUNNER_TEMP/signing.p12"
+            security import "$RUNNER_TEMP/signing.p12" -k "$kc" -P "$MACOS_CERT_PASSWORD" \
+              -T /usr/bin/codesign -T /usr/bin/productsign -T /usr/bin/productbuild -T /usr/bin/pkgbuild
+            rm -f "$RUNNER_TEMP/signing.p12"
+          done
+          # Lets codesign use the keys without a password prompt nobody can answer.
+          security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "$kcpass" "$kc" >/dev/null
+          security list-keychains -d user -s "$kc" login.keychain-db
+          # vpk calls notarytool without --keychain, so the profile has to be in the default one.
+          security default-keychain -d user -s "$kc"
+
+          # The identities carry the account holder's legal name. Mask it before any later step prints it.
+          identities="$(security find-identity -v "$kc" | grep -o '"Developer ID [^"]*"' | tr -d '"' || true)"
+          while IFS= read -r identity; do
+            [ -n "$identity" ] || continue
+            name="${identity#*: }"
+            name="${name% (*}"
+            echo "::add-mask::$identity"
+            echo "::add-mask::$name"
+            for part in $name; do
+              [ "${#part}" -lt 3 ] || echo "::add-mask::$part"
+            done
+          done <<< "$identities"
+          if ! grep -q '^Developer ID Application: ' <<< "$identities" || ! grep -q '^Developer ID Installer: ' <<< "$identities"; then
+            echo "::error::Expected a Developer ID Application and a Developer ID Installer identity from the two certificate secrets."
+            exit 1
+          fi
+
+          printf '%s' "$APPLE_API_KEY_P8" > "$RUNNER_TEMP/notary.p8"
+          xcrun notarytool store-credentials notary \
+            --key "$RUNNER_TEMP/notary.p8" --key-id "$APPLE_API_KEY_ID" --issuer "$APPLE_API_ISSUER" \
+            --keychain "$kc"
+          rm -f "$RUNNER_TEMP/notary.p8"
+          echo "signed=true" >> "$GITHUB_OUTPUT"
+
+      # Notarization rejects any unsigned Mach-O file in the bundle, and PyInstaller
+      # ships the Python runtime and every extension module as separate binaries.
+      # The main executable is left to vpk, which signs the bundle last.
+      - name: Sign the bundled binaries (macOS)
+        if: steps.macsign.outputs.signed == 'true'
+        shell: bash
+        env:
+          SIGN_KEYCHAIN: ${{ steps.macsign.outputs.keychain }}
+        run: |
+          set -euo pipefail
+          app="$(security find-identity -v -p codesigning "$SIGN_KEYCHAIN" | grep -m1 -o '"Developer ID Application: [^"]*"' | tr -d '"' || true)"
+          [ -n "$app" ] || { echo "::error::No Developer ID Application identity in the signing keychain."; exit 1; }
+          main=dist/NotionMnemoConverter.app/Contents/MacOS/NotionMnemoConverter
+          find dist/NotionMnemoConverter.app -type f ! -path "$main" -print0 | while IFS= read -r -d '' f; do
+            if file -b "$f" | grep -q '^Mach-O'; then
+              codesign --force --timestamp --options runtime \
+                --entitlements packaging/macos/app.entitlements \
+                --keychain "$SIGN_KEYCHAIN" --sign "$app" "$f"
+            fi
+          done
+
+      - name: Pack (macOS, signed)
+        if: steps.macsign.outputs.signed == 'true'
+        shell: bash
+        env:
+          SIGN_KEYCHAIN: ${{ steps.macsign.outputs.keychain }}
+        run: |
+          set -euo pipefail
+          app="$(security find-identity -v -p codesigning "$SIGN_KEYCHAIN" | grep -m1 -o '"Developer ID Application: [^"]*"' | tr -d '"')"
+          installer="$(security find-identity -v "$SIGN_KEYCHAIN" | grep -m1 -o '"Developer ID Installer: [^"]*"' | tr -d '"')"
+          vpk pack --packId "$PACK_ID" --packTitle "$PACK_TITLE" --packAuthors Mnemo \
+            --packVersion ${{ steps.version.outputs.version }} \
+            --packDir dist/NotionMnemoConverter.app --mainExe NotionMnemoConverter \
+            --icon assets/icon.icns \
+            --releaseNotes RELEASE_NOTES.md --outputDir Releases \
+            --signAppIdentity "$app" --signInstallIdentity "$installer" \
+            --signEntitlements packaging/macos/app.entitlements \
+            --notaryProfile notary --keychain "$SIGN_KEYCHAIN"
+
+      - name: Zip the app (macOS, unsigned)
+        if: runner.os == 'macOS' && steps.macsign.outputs.signed != 'true'
+        run: |
+          mkdir -p Unsigned
+          ditto -c -k --sequesterRsrc --keepParent dist/NotionMnemoConverter.app \
+            Unsigned/NotionMnemoConverter-osx-arm64-unsigned.zip
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.channel }}
+          path: |
+            Releases/
+            Unsigned/
+          if-no-files-found: error
+
+  publish:
+    name: Publish
+    needs: build
+    if: github.event_name == 'push' || inputs.publish
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: "8.0.x"
+
+      - name: Install vpk
+        run: dotnet tool install -g vpk
+
+      - name: Read the version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            version="${{ inputs.version }}"
+          else
+            version="${GITHUB_REF_NAME#v}"
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          # A SemVer suffix such as 1.0.0-beta publishes as a GitHub pre-release.
+          if [[ "$version" == *-* ]]; then echo "pre=--pre" >> "$GITHUB_OUTPUT"; fi
+
+      # One channel at a time into the same release. --merge adds to the release
+      # the first upload created.
+      - name: Upload each channel
+        shell: bash
+        run: |
+          for channel in win linux osx; do
+            dir="artifacts/release-$channel/Releases"
+            [ -f "$dir/releases.$channel.json" ] || { echo "No Velopack release for $channel"; continue; }
+            vpk upload github \
+              --outputDir "$dir" --channel "$channel" \
+              --repoUrl https://github.com/${{ github.repository }} \
+              --token ${{ secrets.GITHUB_TOKEN }} \
+              --tag v${{ steps.version.outputs.version }} \
+              --releaseName "v${{ steps.version.outputs.version }}" \
+              --targetCommitish ${{ github.sha }} \
+              --merge --publish ${{ steps.version.outputs.pre }}
+          done
+
+      - name: Attach the unsigned macOS app
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          shopt -s nullglob
+          files=(artifacts/release-osx/Unsigned/*.zip)
+          if [ ${#files[@]} -gt 0 ]; then
+            gh release upload "v${{ steps.version.outputs.version }}" "${files[@]}" \
+              --repo ${{ github.repository }} --clobber
+          fi
