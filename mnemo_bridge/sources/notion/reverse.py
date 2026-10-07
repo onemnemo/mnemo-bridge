@@ -326,12 +326,6 @@ def _page(block, payload, ctx):
     return NotionNode(block=None, note_ref=reference)
 
 
-def _sketch(block, payload, ctx):
-    text = spans_plain_text(block.get("spans"))
-    ctx.warnings.append("a sketch block has no Notion equivalent; its source was kept as a code block")
-    return _code_nodes(text or "(empty sketch)", "plain text")
-
-
 _HANDLERS: dict[str, Callable[[dict, dict, ReverseContext], NotionNode | None]] = {
     "Text": _paragraph,
     "Heading1": _heading(1),
@@ -350,7 +344,6 @@ _HANDLERS: dict[str, Callable[[dict, dict, ReverseContext], NotionNode | None]] 
     "Table": _table,
     "TwoColumn": _two_column,
     "Page": _page,
-    "Sketch": _sketch,
     # A stray cell, row or column group outside its container becomes a paragraph.
     "TableRow": _paragraph,
     "TableCell": _paragraph,

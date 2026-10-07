@@ -107,7 +107,7 @@ class BlockJson(unittest.TestCase):
         # An unknown payload kind throws in C#; this is the list ReadPayload switches on.
         known = {
             "empty", "equation", "image", "code", "checklist",
-            "twocolumn", "page", "sketch", "table", "tablecell", "callout",
+            "twocolumn", "page", "table", "tablecell", "callout",
         }
         payloads = [
             mnemo.empty_payload(),

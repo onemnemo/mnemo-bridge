@@ -29,7 +29,6 @@ COLUMN_GROUP = "ColumnGroup"
 TWO_COLUMN = "TwoColumn"
 EQUATION = "Equation"
 PAGE = "Page"
-SKETCH = "Sketch"
 CALLOUT = "Callout"
 TABLE = "Table"
 TABLE_ROW = "TableRow"
@@ -41,7 +40,8 @@ ALL_BLOCK_TYPES: tuple[str, ...] = (
     TEXT, HEADING1, HEADING2, HEADING3, HEADING4,
     BULLET_LIST, NUMBERED_LIST, CHECKLIST, QUOTE,
     CODE, DIVIDER, IMAGE, COLUMN_GROUP, TWO_COLUMN,
-    EQUATION, PAGE, SKETCH, CALLOUT,
+    # "Sketch" is a retired block type that still holds its ordinal.
+    EQUATION, PAGE, "Sketch", CALLOUT,
     TABLE, TABLE_ROW, TABLE_CELL,
 )
 

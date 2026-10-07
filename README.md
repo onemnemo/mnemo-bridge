@@ -95,7 +95,6 @@ Bold, italic, underline, strikethrough, inline code, links, text colour and back
 | TwoColumn | Columns | Width ratio kept |
 | Sub-note | Child page at its position | |
 | Folder | A page holding its notes | Notion has no folders |
-| Sketch | Code block with its source | Notion has no drawings |
 
 ### Colours
 
