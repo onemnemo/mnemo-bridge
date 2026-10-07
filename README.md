@@ -6,6 +6,11 @@ Notion to Mnemo writes a `.mnemo` package that you import from **Notes > Import*
 
 Everything runs on your machine. The only traffic is between your machine and Notion's API. There is no account and no tracking.
 
+<p align="center">
+  <img src="docs/screenshots/choose-pages.png" alt="Choosing Notion pages to export" width="49%">
+  <img src="docs/screenshots/exported.png" alt="A finished export with the steps to import it in Mnemo" width="49%">
+</p>
+
 ## Install
 
 Download the app from the [latest release](https://github.com/onemnemo/mnemo-bridge/releases/latest). Installed copies check for a new version when they start and ask before updating.
