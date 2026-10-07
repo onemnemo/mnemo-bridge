@@ -4,11 +4,11 @@
 def main() -> int:
     # Velopack's install and update hooks re-run this executable and expect it
     # to exit, so boot() must run before the slow GUI import or any window.
-    from notion2mnemo.updates import boot
+    from mnemo_bridge.updates import boot
 
     boot()
 
-    from notion2mnemo.gui.app import run_gui
+    from mnemo_bridge.gui.app import run_gui
 
     return run_gui()
 

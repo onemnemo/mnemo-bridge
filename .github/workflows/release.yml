@@ -2,7 +2,7 @@
 #
 #   git tag v1.2.0 && git push origin v1.2.0
 #
-# The tag must match notion2mnemo.__version__. Each installed app reads its own
+# The tag must match mnemo_bridge.__version__. Each installed app reads its own
 # feed (releases.win.json, releases.osx.json, releases.linux.json) off the
 # release, so publishing it is what ships an update.
 #
@@ -31,8 +31,8 @@ permissions:
   contents: write
 
 env:
-  PACK_ID: NotionMnemoConverter
-  PACK_TITLE: Notion to Mnemo Converter
+  PACK_ID: MnemoBridge
+  PACK_TITLE: Mnemo Bridge
 
 jobs:
   build:
@@ -91,9 +91,9 @@ jobs:
       - name: Check the tag matches the version
         shell: bash
         run: |
-          declared=$(python -c "import notion2mnemo; print(notion2mnemo.__version__)")
+          declared=$(python -c "import mnemo_bridge; print(mnemo_bridge.__version__)")
           if [ "$declared" != "${{ steps.version.outputs.version }}" ]; then
-            echo "::error::The tag says ${{ steps.version.outputs.version }} but notion2mnemo/__init__.py says $declared."
+            echo "::error::The tag says ${{ steps.version.outputs.version }} but mnemo_bridge/__init__.py says $declared."
             exit 1
           fi
 
@@ -101,20 +101,20 @@ jobs:
         run: python -m unittest discover -s tests -t .
 
       - name: Build
-        run: pyinstaller notion2mnemo.spec --noconfirm
+        run: pyinstaller mnemo-bridge.spec --noconfirm
 
       # Starts the built app hidden, waits for the page to load, and exits.
       - name: Smoke test the built app
         shell: bash
         env:
-          NOTION2MNEMO_SMOKE: "1"
+          MNEMO_BRIDGE_SMOKE: "1"
           # Chromium's sandbox needs privileges the CI container doesn't have.
           QTWEBENGINE_DISABLE_SANDBOX: "1"
         run: |
           case "${{ matrix.channel }}" in
-            win)   app=./dist/NotionMnemoConverter/NotionMnemoConverter.exe ;;
-            osx)   app=./dist/NotionMnemoConverter.app/Contents/MacOS/NotionMnemoConverter ;;
-            linux) app="xvfb-run -a ./dist/NotionMnemoConverter/NotionMnemoConverter" ;;
+            win)   app=./dist/MnemoBridge/MnemoBridge.exe ;;
+            osx)   app=./dist/MnemoBridge.app/Contents/MacOS/MnemoBridge ;;
+            linux) app="xvfb-run -a ./dist/MnemoBridge/MnemoBridge" ;;
           esac
           output=$($app 2>&1 || true)
           echo "$output"
@@ -138,7 +138,7 @@ jobs:
         run: >
           vpk pack --packId ${{ env.PACK_ID }} --packTitle "${{ env.PACK_TITLE }}" --packAuthors Mnemo
           --packVersion ${{ steps.version.outputs.version }}
-          --packDir dist/NotionMnemoConverter --mainExe NotionMnemoConverter.exe
+          --packDir dist/MnemoBridge --mainExe MnemoBridge.exe
           --icon assets/icon.ico --framework webview2
           --releaseNotes RELEASE_NOTES.md --outputDir Releases
 
@@ -147,7 +147,7 @@ jobs:
         run: >
           vpk pack --packId ${{ env.PACK_ID }} --packTitle "${{ env.PACK_TITLE }}" --packAuthors Mnemo
           --packVersion ${{ steps.version.outputs.version }}
-          --packDir dist/NotionMnemoConverter --mainExe NotionMnemoConverter
+          --packDir dist/MnemoBridge --mainExe MnemoBridge
           --icon assets/icon.png
           --releaseNotes RELEASE_NOTES.md --outputDir Releases
 
@@ -231,8 +231,8 @@ jobs:
           set -euo pipefail
           app="$(security find-identity -v -p codesigning "$SIGN_KEYCHAIN" | grep -m1 -o '"Developer ID Application: [^"]*"' | tr -d '"' || true)"
           [ -n "$app" ] || { echo "::error::No Developer ID Application identity in the signing keychain."; exit 1; }
-          main=dist/NotionMnemoConverter.app/Contents/MacOS/NotionMnemoConverter
-          find dist/NotionMnemoConverter.app -type f ! -path "$main" -print0 | while IFS= read -r -d '' f; do
+          main=dist/MnemoBridge.app/Contents/MacOS/MnemoBridge
+          find dist/MnemoBridge.app -type f ! -path "$main" -print0 | while IFS= read -r -d '' f; do
             if file -b "$f" | grep -q '^Mach-O'; then
               codesign --force --timestamp --options runtime \
                 --entitlements packaging/macos/app.entitlements \
@@ -251,7 +251,7 @@ jobs:
           installer="$(security find-identity -v "$SIGN_KEYCHAIN" | grep -m1 -o '"Developer ID Installer: [^"]*"' | tr -d '"')"
           vpk pack --packId "$PACK_ID" --packTitle "$PACK_TITLE" --packAuthors Mnemo \
             --packVersion ${{ steps.version.outputs.version }} \
-            --packDir dist/NotionMnemoConverter.app --mainExe NotionMnemoConverter \
+            --packDir dist/MnemoBridge.app --mainExe MnemoBridge \
             --icon assets/icon.icns \
             --releaseNotes RELEASE_NOTES.md --outputDir Releases \
             --signAppIdentity "$app" --signInstallIdentity "$installer" \
@@ -262,8 +262,8 @@ jobs:
         if: runner.os == 'macOS' && steps.macsign.outputs.signed != 'true'
         run: |
           mkdir -p Unsigned
-          ditto -c -k --sequesterRsrc --keepParent dist/NotionMnemoConverter.app \
-            Unsigned/NotionMnemoConverter-osx-arm64-unsigned.zip
+          ditto -c -k --sequesterRsrc --keepParent dist/MnemoBridge.app \
+            Unsigned/MnemoBridge-osx-arm64-unsigned.zip
 
       - uses: actions/upload-artifact@v4
         with:

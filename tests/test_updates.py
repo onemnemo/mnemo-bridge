@@ -9,7 +9,7 @@ from __future__ import annotations
 import unittest
 from unittest import mock
 
-from notion2mnemo.updates import Updater, boot
+from mnemo_bridge.updates import Updater, boot
 
 
 class _Boom:
@@ -70,7 +70,7 @@ class UpdaterWhenNotInstalled(unittest.TestCase):
         fake.App = _Boom
         with mock.patch.dict("sys.modules", {"velopack": fake}):
             # assertLogs also keeps the expected traceback out of test output.
-            with self.assertLogs("notion2mnemo.updates", level="ERROR") as caught:
+            with self.assertLogs("mnemo_bridge.updates", level="ERROR") as caught:
                 boot()  # must not raise
         self.assertIn("velopack startup hook failed", caught.output[0])
 
@@ -98,7 +98,7 @@ class UpdaterWhenAnUpdateExists(unittest.TestCase):
         self.assertEqual(found, {
             "version": "1.2.0",
             "notes": "Fixed a thing.",
-            "url": "https://github.com/torstfugl/mnemo2notion/releases/tag/v1.2.0",
+            "url": "https://github.com/onemnemo/mnemo-bridge/releases/tag/v1.2.0",
         })
 
     def test_missing_notes_become_an_empty_string(self):

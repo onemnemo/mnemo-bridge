@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import mnemo
+from ... import mnemo
 from .colors import ColorMap
-from .mnemo import Block, TextSpan, TextStyle, plain
+from ...mnemo import Block, TextSpan, TextStyle, plain
 from .richtext import convert_rich_text
 
 

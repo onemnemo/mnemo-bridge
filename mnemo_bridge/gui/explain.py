@@ -5,7 +5,7 @@ from __future__ import annotations
 import traceback
 from typing import Any
 
-from ..notion import NotionError
+from ..sources.notion.client import NotionError
 
 
 def _explain(title: str, *, detail: str = "", checks: list[str] | None = None) -> dict[str, Any]:

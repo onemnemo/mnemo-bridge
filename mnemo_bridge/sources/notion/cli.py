@@ -1,4 +1,4 @@
-"""Command line entry point."""
+"""The notion command: pull pages into a Mnemo package, or push one into Notion."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ import os
 import sys
 from pathlib import Path
 
-from . import __version__
+from ... import __version__
+from ...package import read_package, write_package
 from .assets import AssetStore
+from .client import DEFAULT_VERSION, NotionClient, NotionError
 from .colors import load_overrides
-from .notion import DEFAULT_VERSION, NotionClient, NotionError
-from .package import read_package, write_package
 from .walker import WalkOptions, Walker
 
 EPILOG = """\
@@ -24,30 +24,32 @@ setup:
   3. export NOTION_TOKEN=ntn_...        (Windows: $env:NOTION_TOKEN = "ntn_...")
 
 examples:
-  python -m notion2mnemo -o notes.mnemo
-  python -m notion2mnemo --page https://www.notion.so/My-Page-abc123... --covers
-  python -m notion2mnemo --database 1234abcd... --db-properties none
+  python -m mnemo_bridge notion pull -o notes.mnemo
+  python -m mnemo_bridge notion pull --page https://www.notion.so/My-Page-abc123... --covers
+  python -m mnemo_bridge notion pull --database 1234abcd... --db-properties none
 
-  python -m notion2mnemo push notes.mnemo --parent https://www.notion.so/Imports-...
-  python -m notion2mnemo gui
+  python -m mnemo_bridge notion push notes.mnemo --parent https://www.notion.so/Imports-...
 
 then, in Mnemo: Notes -> Import -> pick the .mnemo file.
+"""
 
-subcommands:
-  pull   Notion -> .mnemo (the default when no subcommand is given)
-  push   .mnemo -> Notion (creates real pages under --parent)
-  gui    open the graphical app
+USAGE = """usage: mnemo-bridge notion {pull,push} ...
+
+  pull   Notion pages to a .mnemo package
+  push   a .mnemo package to Notion pages
+
+Add --help after either for its options.
 """
 
 
-def build_parser() -> argparse.ArgumentParser:
+def build_pull_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="notion2mnemo",
+        prog="mnemo-bridge notion pull",
         description="Convert Notion pages into a Mnemo .mnemo notes package.",
         epilog=EPILOG,
         formatter_class=argparse.RawDescriptionHelpFormatter,
     )
-    parser.add_argument("--version", action="version", version=f"notion2mnemo {__version__}")
+    parser.add_argument("--version", action="version", version=f"mnemo-bridge {__version__}")
 
     source = parser.add_argument_group("what to convert")
     source.add_argument(
@@ -143,7 +145,7 @@ def build_parser() -> argparse.ArgumentParser:
 
 def build_push_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(
-        prog="notion2mnemo push",
+        prog="mnemo-bridge notion push",
         description="Write a .mnemo package into Notion as real pages.",
     )
     parser.add_argument("package", help="the .mnemo file to push")
@@ -204,20 +206,18 @@ def run_push(argv: list[str]) -> int:
     return 0
 
 
-def main(argv: list[str] | None = None) -> int:
-    argv = list(sys.argv[1:] if argv is None else argv)
-
-    # A bare invocation means pull.
+def main(argv: list[str]) -> int:
+    if argv and argv[0] == "pull":
+        return run_pull(argv[1:])
     if argv and argv[0] == "push":
         return run_push(argv[1:])
-    if argv and argv[0] == "gui":
-        from .gui.app import run_gui
+    asked = bool(argv) and argv[0] in {"-h", "--help"}
+    print(USAGE, file=sys.stdout if asked else sys.stderr)
+    return 0 if asked else 2
 
-        return run_gui()
-    if argv and argv[0] == "pull":
-        argv = argv[1:]
 
-    args = build_parser().parse_args(argv)
+def run_pull(argv: list[str]) -> int:
+    args = build_pull_parser().parse_args(argv)
 
     if not args.token:
         print(
@@ -284,7 +284,7 @@ def main(argv: list[str] | None = None) -> int:
         result.notes,
         result.folders,
         assets.files,
-        app_version=f"notion2mnemo {__version__}",
+        app_version=f"mnemo-bridge {__version__}",
     )
 
     # Read it back so a malformed package is caught here, not by a silent import.

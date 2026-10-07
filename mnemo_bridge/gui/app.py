@@ -9,7 +9,7 @@ from typing import Any
 
 from .api import Api
 
-APP_NAME = "Notion ↔ Mnemo Converter"
+APP_NAME = "Mnemo Bridge"
 
 
 def _icon_path() -> Path | None:
@@ -22,7 +22,7 @@ def _icon_path() -> Path | None:
 def _web_dir() -> Path:
     # PyInstaller unpacks data files under sys._MEIPASS.
     if hasattr(sys, "_MEIPASS"):
-        return Path(sys._MEIPASS) / "notion2mnemo" / "gui" / "web"  # type: ignore[attr-defined]
+        return Path(sys._MEIPASS) / "mnemo_bridge" / "gui" / "web"  # type: ignore[attr-defined]
     return Path(__file__).parent / "web"
 
 
@@ -38,7 +38,7 @@ def run_gui() -> int:
 
     # Boots the web view, bridge and page without showing a window, checks the
     # page initialised, and exits. Used by CI and packaging.
-    smoke = os.environ.get("NOTION2MNEMO_SMOKE") == "1"
+    smoke = os.environ.get("MNEMO_BRIDGE_SMOKE") == "1"
 
     api = Api()
     window = webview.create_window(

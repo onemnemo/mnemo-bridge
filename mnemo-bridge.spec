@@ -1,9 +1,9 @@
-# PyInstaller spec for the desktop app: pyinstaller notion2mnemo.spec
+# PyInstaller spec for the desktop app: pyinstaller mnemo-bridge.spec
 #
 # A folder build rather than one file, so Velopack updates only the files that
-# changed. The output, dist/NotionMnemoConverter/, is what `vpk pack --packDir`
+# changed. The output, dist/MnemoBridge/, is what `vpk pack --packDir`
 # takes on Windows and Linux. On macOS it is also wrapped as
-# dist/NotionMnemoConverter.app. The icons come from tools/make_icons.py.
+# dist/MnemoBridge.app. The icons come from tools/make_icons.py.
 
 import sys
 
@@ -19,7 +19,7 @@ a = Analysis(
     pathex=["."],
     binaries=[],
     datas=[
-        ("notion2mnemo/gui/web", "notion2mnemo/gui/web"),
+        ("mnemo_bridge/gui/web", "mnemo_bridge/gui/web"),
         # Linux window managers read the window icon from the running app.
         ("assets/icon.png", "assets"),
     ],
@@ -44,7 +44,7 @@ exe = EXE(
     a.scripts,
     [],
     exclude_binaries=True,
-    name="NotionMnemoConverter",
+    name="MnemoBridge",
     debug=False,
     strip=False,
     upx=False,
@@ -58,19 +58,19 @@ coll = COLLECT(
     a.datas,
     strip=False,
     upx=False,
-    name="NotionMnemoConverter",
+    name="MnemoBridge",
 )
 
 if sys.platform == "darwin":
     app = BUNDLE(
         coll,
-        name="NotionMnemoConverter.app",
+        name="MnemoBridge.app",
         icon=ICONS["darwin"],
-        bundle_identifier="one.mnemo.notion2mnemo",
+        bundle_identifier="one.mnemo.bridge",
         info_plist={
-            "CFBundleDisplayName": "Notion Mnemo Converter",
-            "CFBundleName": "Notion Mnemo Converter",
-            "CFBundleShortVersionString": __import__("notion2mnemo").__version__,
+            "CFBundleDisplayName": "Mnemo Bridge",
+            "CFBundleName": "Mnemo Bridge",
+            "CFBundleShortVersionString": __import__("mnemo_bridge").__version__,
             "NSHighResolutionCapable": True,
         },
     )

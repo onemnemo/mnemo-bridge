@@ -1,4 +1,4 @@
-"""The saved integration key: the system keychain when there is one, else the config file."""
+"""The saved Notion integration key: the system keychain when there is one, else the config file."""
 
 from __future__ import annotations
 
@@ -7,11 +7,11 @@ import os
 from pathlib import Path
 from typing import Any
 
-CONFIG_DIR = Path.home() / ".notion2mnemo"
+CONFIG_DIR = Path.home() / ".mnemo-bridge"
 CONFIG_PATH = CONFIG_DIR / "config.json"
 
-KEYRING_SERVICE = "notion2mnemo"
-KEYRING_USER = "integration-token"
+KEYRING_SERVICE = "mnemo-bridge"
+KEYRING_USER = "notion-token"
 
 
 def _load_config() -> dict[str, Any]:

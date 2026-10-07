@@ -4,9 +4,9 @@ from __future__ import annotations
 
 from typing import Any
 
-from . import mnemo
+from ... import mnemo
 from .assets import file_url
-from .mnemo import Block, InlineSpan, TextSpan, TextStyle, plain
+from ...mnemo import Block, InlineSpan, TextSpan, TextStyle, plain
 from .richtext import convert_rich_text, rich_text_to_plain
 
 

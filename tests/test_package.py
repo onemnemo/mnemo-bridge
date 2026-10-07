@@ -9,9 +9,9 @@ import zipfile
 from datetime import datetime, timezone
 from pathlib import Path
 
-from notion2mnemo import mnemo
-from notion2mnemo.mnemo import Block, Folder, Note, plain
-from notion2mnemo.package import PAYLOAD_ROOT, read_package, write_package
+from mnemo_bridge import mnemo
+from mnemo_bridge.mnemo import Block, Folder, Note, plain
+from mnemo_bridge.package import PAYLOAD_ROOT, read_package, write_package
 
 #: Fixed so the reproducibility test does not measure the wall clock.
 FIXED_TIME = datetime(2026, 2, 3, 4, 5, 6, tzinfo=timezone.utc)

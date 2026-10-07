@@ -5,7 +5,7 @@ from __future__ import annotations
 import zipfile
 from typing import Any, Iterable, Iterator
 
-from .package import ASSET_PREFIX, PAYLOAD_ROOT
+from ...package import ASSET_PREFIX, PAYLOAD_ROOT
 from .reverse import NotionNode
 
 #: Block types Notion lets carry children. Children of any other type are

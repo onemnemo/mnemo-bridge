@@ -30,7 +30,7 @@ jobs:
           cache: pip
           cache-dependency-path: requirements*.txt
 
-      # The converter itself needs only requests. keyring is for the settings test.
+      # The conversion itself needs only requests. keyring is for the settings test.
       - name: Install dependencies
         run: pip install -r requirements.txt keyring
 

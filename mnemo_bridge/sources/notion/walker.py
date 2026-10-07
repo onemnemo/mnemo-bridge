@@ -13,13 +13,13 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Callable, Iterable
 
-from . import mnemo
+from ... import mnemo
 from .assets import AssetStore
 from .colors import ColorMap
 from .convert import BlockConverter, ConversionStats
 from .ids import UNTITLED, _dashed, database_title, normalize_id, page_title
-from .mnemo import Block, Folder, Note
-from .notion import NotionClient
+from ...mnemo import Block, Folder, Note
+from .client import NotionClient
 from .properties import property_table, tags
 
 __all__ = [

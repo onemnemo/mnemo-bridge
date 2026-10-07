@@ -8,7 +8,7 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from notion2mnemo.gui import settings
+from mnemo_bridge.gui import settings
 
 
 class FakeKeyring:

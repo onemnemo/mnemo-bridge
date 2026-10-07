@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Notion ↔ Mnemo Converter</title>
+<title>Mnemo Bridge</title>
 <link rel="stylesheet" href="app.css">
 </head>
 <body>
@@ -14,11 +14,11 @@
   <header class="titlebar">
     <div class="titlebar-drag pywebview-drag-region">
       <img class="app-icon" src="icon.png" alt="">
-      <span class="app-name">Notion ↔ Mnemo</span>
+      <span class="app-name">Mnemo Bridge</span>
       <nav class="rail" id="rail" hidden>
-        <span class="step" id="step-1"><span class="dot">1</span><span class="step-name">Connect</span></span>
-        <span class="step" id="step-2"><span class="dot">2</span><span class="step-name" id="step-2-name">Choose pages</span></span>
-        <span class="step" id="step-3"><span class="dot">3</span><span class="step-name">Convert</span></span>
+        <span class="step" id="step-1"><span class="dot">1</span><span class="step-name"></span></span>
+        <span class="step" id="step-2"><span class="dot">2</span><span class="step-name"></span></span>
+        <span class="step" id="step-3"><span class="dot">3</span><span class="step-name"></span></span>
       </nav>
     </div>
     <div class="winbtns">
@@ -35,21 +35,27 @@
         <div class="head">
           <h1>Convert notes</h1>
         </div>
-        <div class="choices" role="radiogroup" aria-label="Direction">
-          <button class="choice selected" id="dir-pull" aria-pressed="true">
-            <span class="choice-radio"></span>
-            <span class="choice-text">
-              <span class="choice-title">Notion to Mnemo</span>
-              <span class="choice-note">Makes a file you import in Mnemo.</span>
-            </span>
-          </button>
-          <button class="choice" id="dir-push" aria-pressed="false">
-            <span class="choice-radio"></span>
-            <span class="choice-text">
-              <span class="choice-title">Mnemo to Notion</span>
-              <span class="choice-note">Makes Notion pages from a Mnemo export.</span>
-            </span>
-          </button>
+        <!-- One group per source. A new source adds a group here and an entry in SOURCES in app.js. -->
+        <div class="sources" role="radiogroup" aria-label="What to convert">
+          <section class="source" aria-labelledby="source-notion">
+            <h2 class="source-name" id="source-notion">Notion</h2>
+            <div class="choices">
+              <button class="choice selected" data-source="notion" data-direction="pull" aria-pressed="true">
+                <span class="choice-radio"></span>
+                <span class="choice-text">
+                  <span class="choice-title">Notion to Mnemo</span>
+                  <span class="choice-note">Makes a file you import in Mnemo.</span>
+                </span>
+              </button>
+              <button class="choice" data-source="notion" data-direction="push" aria-pressed="false">
+                <span class="choice-radio"></span>
+                <span class="choice-text">
+                  <span class="choice-title">Mnemo to Notion</span>
+                  <span class="choice-note">Makes Notion pages from a Mnemo export.</span>
+                </span>
+              </button>
+            </div>
+          </section>
         </div>
         <div class="notice" id="update-notice" hidden>
           <span class="notice-text" id="update-text"></span>
@@ -59,7 +65,7 @@
       <footer class="actionbar">
         <span class="foot-note" id="version"></span>
         <span class="spacer"></span>
-        <button class="btn primary" data-go="connect">Continue</button>
+        <button class="btn primary" id="start-continue">Continue</button>
       </footer>
     </section>
 

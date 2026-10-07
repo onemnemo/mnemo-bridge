@@ -226,6 +226,10 @@ input[type="checkbox"] { accent-color: var(--accent); width: 15px; height: 15px;
 
 /* Start */
 
+.sources { display: flex; flex-direction: column; gap: 20px; }
+.source { display: flex; flex-direction: column; gap: 8px; }
+.source-name { margin: 0; font-size: 12px; font-weight: 500; color: var(--ink-2); }
+
 .choices { display: flex; flex-direction: column; gap: 8px; }
 .choice {
   display: flex; align-items: flex-start; gap: 12px;

@@ -6,7 +6,7 @@ async function loadPages() {
   placeholder($("page-list"), "Loading pages");
   // Retry returns to this screen first, not just the call.
   state.retry = () => { show("pages"); loadPages(); };
-  const result = await api().list_content(token());
+  const result = await api().notion_list_content(token());
   if (result.error) {
     placeholder($("page-list"), "Nothing loaded.");
     return showError(result.error, "connect");
@@ -105,7 +105,7 @@ async function runPull() {
   const chosen = state.items.filter((i) => state.selected.has(i.id));
   state.retry = () => { show("ready"); runPull(); };
   beginRun("Exporting", "page");
-  const result = await api().start_pull({
+  const result = await api().notion_start_pull({
     token: token(),
     output: state.outputPath,
     pageIds: chosen.filter((i) => i.kind === "page").map((i) => i.id),

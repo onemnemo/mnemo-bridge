@@ -4,8 +4,21 @@
  * shows progress pushed back through appProgress and appDone. Scripts load in
  * order: util.js, app.js, pull.js, push.js, run.js, update.js. */
 
+/* Each source's screens and rail steps. A new source adds an entry here and a
+ * group of choices on the start screen. */
+const SOURCES = {
+  notion: {
+    first: "connect",
+    steps: {
+      pull: ["Connect", "Choose pages", "Convert"],
+      push: ["Connect", "Choose notes", "Convert"],
+    },
+  },
+};
+
 const state = {
-  direction: "pull",     // "pull" (Notion → Mnemo) or "push"
+  source: "notion",
+  direction: "pull",     // "pull" (into Mnemo) or "push" (out of Mnemo)
   screen: "start",
   items: [],             // pages + databases from list_content
   selected: new Set(),   // ids chosen for pull
@@ -43,8 +56,8 @@ window.addEventListener("pywebviewready", async () => {
     $("win-max").setAttribute("aria-label", "Zoom");
   }
   $("version").textContent = "v" + s.version;
-  if (s.token) $("token").value = s.token;
-  $("remember-token").checked = s.rememberToken;
+  if (s.notionToken) $("token").value = s.notionToken;
+  $("remember-token").checked = s.rememberNotionToken;
   setOutputPath(s.defaultOutput);
   // Says nothing unless a newer release exists.
   api().check_for_update();
@@ -76,9 +89,10 @@ function show(name) {
   const step = RAIL[name];
   $("rail").hidden = !step;
   if (step) {
-    $("step-2-name").textContent = state.direction === "pull" ? "Choose pages" : "Choose notes";
+    const names = SOURCES[state.source].steps[state.direction];
     for (const n of [1, 2, 3]) {
       const el = $("step-" + n);
+      el.querySelector(".step-name").textContent = names[n - 1];
       el.classList.toggle("now", n === step);
       el.classList.toggle("done", n < step);
       el.querySelector(".dot").textContent = n < step ? "✓" : String(n);
@@ -90,15 +104,21 @@ document.querySelectorAll("[data-go]").forEach((el) => {
   el.addEventListener("click", () => show(el.dataset.go));
 });
 
-function setDirection(which) {
-  state.direction = which;
-  $("dir-pull").classList.toggle("selected", which === "pull");
-  $("dir-push").classList.toggle("selected", which === "push");
-  $("dir-pull").setAttribute("aria-pressed", String(which === "pull"));
-  $("dir-push").setAttribute("aria-pressed", String(which === "push"));
+const CHOICES = document.querySelectorAll(".sources .choice");
+
+function choose(source, direction) {
+  state.source = source;
+  state.direction = direction;
+  for (const el of CHOICES) {
+    const on = el.dataset.source === source && el.dataset.direction === direction;
+    el.classList.toggle("selected", on);
+    el.setAttribute("aria-pressed", String(on));
+  }
 }
-$("dir-pull").addEventListener("click", () => setDirection("pull"));
-$("dir-push").addEventListener("click", () => setDirection("push"));
+for (const el of CHOICES) {
+  el.addEventListener("click", () => choose(el.dataset.source, el.dataset.direction));
+}
+$("start-continue").addEventListener("click", () => show(SOURCES[state.source].first));
 
 function token() {
   return $("token").value.trim();
@@ -107,7 +127,7 @@ function token() {
 $("token").addEventListener("change", persistToken);
 $("remember-token").addEventListener("change", persistToken);
 function persistToken() {
-  api().remember_token(token(), $("remember-token").checked);
+  api().notion_remember_token(token(), $("remember-token").checked);
 }
 
 $("connect-continue").addEventListener("click", () => {

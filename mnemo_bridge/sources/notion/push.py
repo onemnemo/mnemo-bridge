@@ -17,8 +17,8 @@ from dataclasses import dataclass, field
 from typing import Any, Callable, Iterable
 
 from .assets import ALLOWED_EXTENSIONS, MAX_FILE_BYTES
-from .notion import NotionClient, NotionError
-from .package import read_package
+from .client import NotionClient, NotionError
+from ...package import read_package
 from .push_layout import (
     _PLACEHOLDER,
     TAKES_CHILDREN,

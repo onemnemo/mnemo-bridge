@@ -4,10 +4,10 @@ from __future__ import annotations
 
 import unittest
 
-from notion2mnemo import mnemo
-from notion2mnemo.assets import AssetStore
-from notion2mnemo.colors import ColorMap
-from notion2mnemo.convert import BlockConverter
+from mnemo_bridge import mnemo
+from mnemo_bridge.sources.notion.assets import AssetStore
+from mnemo_bridge.sources.notion.colors import ColorMap
+from mnemo_bridge.sources.notion.convert import BlockConverter
 
 ANNOTATIONS = {
     "bold": False, "italic": False, "strikethrough": False,

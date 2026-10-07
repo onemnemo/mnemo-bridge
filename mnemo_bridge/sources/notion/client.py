@@ -18,8 +18,8 @@ from typing import Any, Iterator
 
 import requests
 
-from .notion_http import API_ROOT, _expired_file_urls, _never_connected, _retry_after
-from .notion_write import NotionWriteMixin
+from .transport import API_ROOT, _expired_file_urls, _never_connected, _retry_after
+from .write import NotionWriteMixin
 
 #: Covers every page and single-source database. Multi-source databases need
 #: 2025-09-03 or later.

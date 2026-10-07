@@ -1,6 +1,6 @@
 # Contributing
 
-Thanks for helping people move their notes. This converter is part of the Mnemo project and follows [Mnemo's contributing guide](https://github.com/onemnemo/mnemo/blob/main/CONTRIBUTING.md) and [coding standard](https://github.com/onemnemo/mnemo/blob/main/coding-standard.md). The points below are specific to this repository.
+Thanks for helping people move their notes. Mnemo Bridge is part of the Mnemo project and follows [Mnemo's contributing guide](https://github.com/onemnemo/mnemo/blob/main/CONTRIBUTING.md) and [coding standard](https://github.com/onemnemo/mnemo/blob/main/coding-standard.md). The points below are specific to this repository.
 
 ## Tests
 
@@ -14,13 +14,14 @@ The tests need no network and no Notion key. Every API call is faked, and it sho
 
 ## Where changes go
 
-- **A Notion block type:** a handler in `convert.py` (or `convert_layout.py` and `convert_links.py`) and a test in `test_convert.py`.
-- **A Mnemo block type:** a payload constructor in `mnemo.py`, a handler in `reverse.py`, and tests in both directions. Mnemo's reader throws on an unknown payload kind, so payloads are only built through `mnemo.py`.
-- **Colours:** `colors.py` for Notion to Mnemo and `reverse_text.py` for Mnemo to Notion. A note that goes to Mnemo and back must keep its colours.
-- **API behaviour:** `notion.py`. Writes are never cached, and never retried after a timeout or a server error, because Notion may already have applied them.
-- **The app:** `notion2mnemo/gui/web/` is plain HTML, CSS and JavaScript with no build step. All conversion logic stays in Python.
+- **A Notion block type:** a handler in `sources/notion/convert.py` (or `convert_layout.py` and `convert_links.py`) and a test in `test_convert.py`.
+- **A Mnemo block type:** a payload constructor in `mnemo.py`, a handler in `sources/notion/reverse.py`, and tests in both directions. Mnemo's reader throws on an unknown payload kind, so payloads are only built through `mnemo.py`.
+- **Colours:** `sources/notion/colors.py` for Notion to Mnemo and `sources/notion/reverse_text.py` for Mnemo to Notion. A note that goes to Mnemo and back must keep its colours.
+- **API behaviour:** `sources/notion/client.py`. Writes are never cached, and never retried after a timeout or a server error, because Notion may already have applied them.
+- **A new source:** see "Adding a source" in the [README](README.md#adding-a-source).
+- **The app:** `mnemo_bridge/gui/web/` is plain HTML, CSS and JavaScript with no build step. All conversion logic stays in Python.
 
-## Rules for the converter
+## Rules
 
 1. **Nothing is dropped without a trace.** A block that can't be carried becomes a link or a placeholder, and the warnings name it.
 2. **Output is deterministic.** Ids come from source ids through `mnemo.stable_id`, so exporting again updates notes instead of duplicating them.

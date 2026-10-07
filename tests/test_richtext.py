@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import unittest
 
-from notion2mnemo.colors import ColorMap
-from notion2mnemo.mnemo import EquationSpan, TextSpan
-from notion2mnemo.richtext import block_color_style, convert_rich_text, rich_text_to_plain
+from mnemo_bridge.sources.notion.colors import ColorMap
+from mnemo_bridge.mnemo import EquationSpan, TextSpan
+from mnemo_bridge.sources.notion.richtext import block_color_style, convert_rich_text, rich_text_to_plain
 
 COLORS = ColorMap()
 

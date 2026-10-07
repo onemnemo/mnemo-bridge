@@ -6,10 +6,10 @@ import tempfile
 import unittest
 from pathlib import Path
 
-from notion2mnemo import mnemo as m
-from notion2mnemo.notion import NotionError
-from notion2mnemo.package import write_package
-from notion2mnemo.push import NotionWriter
+from mnemo_bridge import mnemo as m
+from mnemo_bridge.sources.notion.client import NotionError
+from mnemo_bridge.package import write_package
+from mnemo_bridge.sources.notion.push import NotionWriter
 
 from .test_reverse import FakeWriterClient
 

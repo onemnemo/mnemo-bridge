@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from . import mnemo
-from .mnemo import Block, plain
+from ... import mnemo
+from ...mnemo import Block, plain
 from .richtext import convert_rich_text, rich_text_to_plain
 
 

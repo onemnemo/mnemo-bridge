@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any
 
-from .notion_http import API_ROOT
+from .transport import API_ROOT
 
 
 class NotionWriteMixin:

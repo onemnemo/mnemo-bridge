@@ -10,7 +10,7 @@ from unittest import mock
 
 import requests
 
-from notion2mnemo.notion import NotionClient, NotionError, _expired_file_urls
+from mnemo_bridge.sources.notion.client import NotionClient, NotionError, _expired_file_urls
 
 
 class Response:
@@ -45,7 +45,7 @@ def client(*outcomes, **kwargs) -> tuple[NotionClient, ScriptedSession]:
     return NotionClient("t", session=session, requests_per_second=0, **kwargs), session
 
 
-@mock.patch("notion2mnemo.notion.time.sleep", lambda _s: None)
+@mock.patch("mnemo_bridge.sources.notion.client.time.sleep", lambda _s: None)
 class Retries(unittest.TestCase):
     def test_reads_retry_through_server_errors(self):
         c, session = client(Response(502), Response(200, {"id": "p"}))
@@ -100,7 +100,7 @@ class Retries(unittest.TestCase):
         self.assertEqual(caught.exception.status, 400)
 
 
-@mock.patch("notion2mnemo.notion.time.sleep", lambda _s: None)
+@mock.patch("mnemo_bridge.sources.notion.client.time.sleep", lambda _s: None)
 class Cache(unittest.TestCase):
     def test_expired_file_links_are_refetched(self):
         stale = {"results": [{"image": {"file": {"url": "u", "expiry_time": "2000-01-01T00:00:00.000Z"}}}]}

@@ -1,26 +1,24 @@
-# Notion ↔ Mnemo Converter
+# Mnemo Bridge
 
-Moves notes between [Notion](https://www.notion.com) and [Mnemo](https://github.com/onemnemo/mnemo) in both directions and keeps the formatting: equations, text and background colours, headings, callouts, tables, columns, images, sub-pages, tags and page icons.
+Moves notes between [Mnemo](https://github.com/onemnemo/mnemo) and other apps and keeps the formatting. It supports [Notion](https://www.notion.com) in both directions, carrying equations, text and background colours, headings, callouts, tables, columns, images, sub-pages, tags and page icons.
 
 Notion to Mnemo writes a `.mnemo` package that you import from **Notes > Import** in Mnemo. Mnemo to Notion creates real pages through Notion's API and uploads the images.
 
 Everything runs on your machine. The only traffic is between your machine and Notion's API. There is no account and no tracking.
 
-<img width="985" height="737" alt="The converter's start screen" src="https://github.com/user-attachments/assets/639c7c70-e8cc-445d-8969-e06ed3eb12c5" />
-
 ## Install
 
-Download the app from the [latest release](https://github.com/onemnemo/mnemo2notion/releases/latest). Installed copies check for a new version when they start and ask before updating.
+Download the app from the [latest release](https://github.com/onemnemo/mnemo-bridge/releases/latest). Installed copies check for a new version when they start and ask before updating.
 
-- **Windows:** run `NotionMnemoConverter-win-Setup.exe`. Windows may warn about an unknown publisher because the Windows build isn't code-signed yet. The portable zip works without installing but doesn't update itself.
-- **macOS (Apple Silicon):** open `NotionMnemoConverter-osx-Setup.pkg`.
-- **Linux:** download `NotionMnemoConverter-linux.AppImage`, run `chmod +x` on it and start it. If your distribution asks for FUSE, install `libfuse2`.
+- **Windows:** run `MnemoBridge-win-Setup.exe`. Windows may warn about an unknown publisher because the Windows build isn't code-signed yet. The portable zip works without installing but doesn't update itself.
+- **macOS (Apple Silicon):** open `MnemoBridge-osx-Setup.pkg`.
+- **Linux:** download `MnemoBridge-linux.AppImage`, run `chmod +x` on it and start it. If your distribution asks for FUSE, install `libfuse2`.
 
 To run from source:
 
 ```bash
 pip install -r requirements-gui.txt
-python -m notion2mnemo gui
+python -m mnemo_bridge gui
 ```
 
 ## Connect Notion
@@ -33,25 +31,25 @@ You do this once, and it takes about two minutes.
 
 Mnemo to Notion also needs the integration's insert content capability, which new integrations have by default, and the integration must be connected to the page you import under.
 
-When you tick **Remember**, the app keeps the key in the system keychain (Windows Credential Manager, macOS Keychain or the Secret Service on Linux). Without a keychain it uses `~/.notion2mnemo/config.json`.
+When you tick **Remember**, the app keeps the key in the system keychain (Windows Credential Manager, macOS Keychain or the Secret Service on Linux). Without a keychain it uses `~/.mnemo-bridge/config.json`.
 
 ## Command line
 
-The command line does everything the app does. `python -m notion2mnemo --help` lists every option.
+The command line does everything the app does. `python -m mnemo_bridge --help` lists the commands, and `python -m mnemo_bridge notion pull --help` lists every export option.
 
 ```bash
 pip install -r requirements.txt
 export NOTION_TOKEN=ntn_...            # PowerShell: $env:NOTION_TOKEN = "ntn_..."
 
 # Notion to Mnemo, everything the integration can see
-python -m notion2mnemo -o notes.mnemo
+python -m mnemo_bridge notion pull -o notes.mnemo
 
 # Only some pages or databases (URLs or ids, repeatable)
-python -m notion2mnemo --page https://www.notion.so/My-Page-abc... --covers
-python -m notion2mnemo --database 1234abcd... --db-properties none
+python -m mnemo_bridge notion pull --page https://www.notion.so/My-Page-abc... --covers
+python -m mnemo_bridge notion pull --database 1234abcd... --db-properties none
 
 # Mnemo to Notion, under a parent page
-python -m notion2mnemo push notes.mnemo --parent https://www.notion.so/Imports-...
+python -m mnemo_bridge notion push notes.mnemo --parent https://www.notion.so/Imports-...
 ```
 
 Exporting caches API responses in `.notion-cache/`, so running it again costs no API calls. Pages you edit in Notion afterwards are not refreshed, so pass `--no-cache` or delete the folder to pick up changes. Image links that have expired are fetched again.
@@ -101,7 +99,7 @@ Bold, italic, underline, strikethrough, inline code, links, text colour and back
 
 ### Colours
 
-Mnemo stores colours as theme tokens and Notion has nine fixed colours. Both directions match on hue, so a note that goes to Mnemo and back keeps its colours. Three pairs of Notion colours share a Mnemo colour because Mnemo has no brown, as listed in [`colors.py`](notion2mnemo/colors.py). `--color-map FILE` overrides the mapping.
+Mnemo stores colours as theme tokens and Notion has nine fixed colours. Both directions match on hue, so a note that goes to Mnemo and back keeps its colours. Three pairs of Notion colours share a Mnemo colour because Mnemo has no brown, as listed in [`colors.py`](mnemo_bridge/sources/notion/colors.py). `--color-map FILE` overrides the mapping.
 
 Notion text has either a text colour or a background, not both. A Mnemo span with both keeps the background.
 
@@ -123,33 +121,42 @@ Note ids come from Notion ids, so exporting twice gives the same ids. Import int
 ```bash
 pip install -r requirements-dev.txt
 python -m unittest discover -s tests -t .     # no network or Notion key needed
-python -m notion2mnemo gui
-pyinstaller notion2mnemo.spec                 # builds into dist/NotionMnemoConverter/
+python -m mnemo_bridge gui
+pyinstaller mnemo-bridge.spec                 # builds into dist/MnemoBridge/
 ```
 
 The tests check the JSON against what Mnemo's `BlockJsonConverter` reads, so a format change on either side fails a test here.
 
+Everything Mnemo-specific sits at the top of `mnemo_bridge/`. Each app it converts to and from has its own folder under `sources/`.
+
 | Module | What it does |
 | --- | --- |
 | `mnemo.py` | Mnemo's note model and its JSON |
-| `colors.py` | Colour mapping between the two |
-| `richtext.py` | Notion rich text to Mnemo spans |
-| `convert.py` | Notion blocks to Mnemo blocks |
-| `walker.py` | Finding pages, folders, sub-pages and databases |
-| `reverse.py`, `reverse_text.py` | Mnemo blocks and text to Notion blocks |
-| `push.py`, `push_layout.py` | Writing to Notion within its request limits |
-| `notion.py` | API client with throttling, retries and the cache |
-| `assets.py` | Images and Mnemo asset ids |
 | `package.py` | Reading and writing `.mnemo` packages |
 | `updates.py` | Self-update through Velopack |
-| `gui/` | The desktop app |
-| `cli.py` | The command line |
+| `cli.py` | The command line, one command per source |
+| `gui/` | The desktop app. `gui/notion.py` is the Notion part of its bridge |
+| `sources/notion/client.py` | API client with throttling, retries and the cache |
+| `sources/notion/walker.py` | Finding pages, folders, sub-pages and databases |
+| `sources/notion/convert.py` | Notion blocks to Mnemo blocks |
+| `sources/notion/richtext.py` | Notion rich text to Mnemo spans |
+| `sources/notion/colors.py` | Colour mapping between the two |
+| `sources/notion/assets.py` | Images and Mnemo asset ids |
+| `sources/notion/reverse.py`, `reverse_text.py` | Mnemo blocks and text to Notion blocks |
+| `sources/notion/push.py`, `push_layout.py` | Writing to Notion within its request limits |
+| `sources/notion/cli.py` | The `notion pull` and `notion push` commands |
+
+### Adding a source
+
+1. Put the conversion in `sources/<name>/`, reading and writing Mnemo packages through `package.py`.
+2. Add a `<name>` command in `cli.py`.
+3. In the app, add a bridge mixin in `gui/<name>.py` with methods prefixed `<name>_`, a group of choices on the start screen in `index.html`, and an entry in `SOURCES` in `app.js` naming its first screen and its steps.
 
 The app icon is drawn by [`tools/make_icons.py`](tools/make_icons.py). Run it again after changing the design.
 
 ## Releasing
 
-Bump `__version__` in [`notion2mnemo/__init__.py`](notion2mnemo/__init__.py) and push a matching tag:
+Bump `__version__` in [`mnemo_bridge/__init__.py`](mnemo_bridge/__init__.py) and push a matching tag:
 
 ```bash
 git tag v1.2.0
@@ -162,8 +169,8 @@ Each installed app reads its own update feed (`releases.win.json`, `releases.osx
 
 - **macOS** is signed and notarized with the organization's `MACOS_*` and `APPLE_API_*` secrets, the same ones Mnemo uses. Without them the build ships as an unsigned `.app` in a zip that doesn't update itself.
 - **Windows** is not signed yet. A certificate would go in through `vpk pack --signParams`.
-- **Pre-releases:** a tag such as `v1.1.0-beta` publishes as a GitHub pre-release. Installed apps ignore those unless `PRERELEASE` in [`updates.py`](notion2mnemo/updates.py) is on.
-- **The pack id is permanent.** Installed apps find updates by `NotionMnemoConverter`, so changing it cuts them off.
+- **Pre-releases:** a tag such as `v1.1.0-beta` publishes as a GitHub pre-release. Installed apps ignore those unless `PRERELEASE` in [`updates.py`](mnemo_bridge/updates.py) is on.
+- **The pack id is permanent.** Installed apps find updates by `MnemoBridge`, so changing it cuts them off.
 
 ## Troubleshooting
 

@@ -14,7 +14,7 @@ from __future__ import annotations
 import logging
 from typing import Any, Callable
 
-REPO_URL = "https://github.com/torstfugl/mnemo2notion"
+REPO_URL = "https://github.com/onemnemo/mnemo-bridge"
 
 #: Pre-releases are skipped unless this is on; only a beta build should enable it.
 PRERELEASE = False

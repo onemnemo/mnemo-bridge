@@ -4,11 +4,11 @@ from __future__ import annotations
 
 import unittest
 
-from notion2mnemo import mnemo
-from notion2mnemo.assets import AssetStore
-from notion2mnemo.colors import ColorMap
-from notion2mnemo.package import read_package, write_package
-from notion2mnemo.walker import WalkOptions, Walker, normalize_id, page_title
+from mnemo_bridge import mnemo
+from mnemo_bridge.sources.notion.assets import AssetStore
+from mnemo_bridge.sources.notion.colors import ColorMap
+from mnemo_bridge.package import read_package, write_package
+from mnemo_bridge.sources.notion.walker import WalkOptions, Walker, normalize_id, page_title
 
 ANNOTATIONS = {
     "bold": False, "italic": False, "strikethrough": False,

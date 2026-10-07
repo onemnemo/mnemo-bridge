@@ -5,7 +5,7 @@ from __future__ import annotations
 import unittest
 from typing import Any
 
-from notion2mnemo.reverse import (
+from mnemo_bridge.sources.notion.reverse import (
     MAX_TEXT_LENGTH,
     NotionNode,
     ReverseContext,
@@ -62,8 +62,8 @@ class RichText(unittest.TestCase):
     def test_round_trip_convergence(self):
         # Forward maps notion red -> swatch5; backward maps swatch5 -> red.
         # A note that goes Notion -> Mnemo -> Notion keeps its colour.
-        from notion2mnemo.colors import TEXT_COLORS
-        from notion2mnemo.reverse import FOREGROUND_TO_NOTION
+        from mnemo_bridge.sources.notion.colors import TEXT_COLORS
+        from mnemo_bridge.sources.notion.reverse import FOREGROUND_TO_NOTION
 
         for notion_color, token in TEXT_COLORS.items():
             back = FOREGROUND_TO_NOTION[token]
@@ -242,7 +242,7 @@ class Columns(unittest.TestCase):
 
 class NotionLimits(unittest.TestCase):
     def test_chunks_count_utf16_and_keep_emoji_whole(self):
-        from notion2mnemo.reverse_text import _chunks, _utf16_len
+        from mnemo_bridge.sources.notion.reverse_text import _chunks, _utf16_len
 
         family = "👨‍👩‍👧"
         text = ("a" + family) * 400
@@ -327,8 +327,8 @@ class Writer(unittest.TestCase):
     def make_package(self, tmp, notes_blocks, title="Note"):
         from pathlib import Path
 
-        from notion2mnemo import mnemo as m
-        from notion2mnemo.package import write_package
+        from mnemo_bridge import mnemo as m
+        from mnemo_bridge.package import write_package
 
         note = m.Note(note_id="n1", title=title, emoji="⚛️",
                       blocks=notes_blocks)
@@ -339,8 +339,8 @@ class Writer(unittest.TestCase):
     def run_push(self, notes_blocks):
         import tempfile
 
-        from notion2mnemo import mnemo as m
-        from notion2mnemo.push import NotionWriter
+        from mnemo_bridge import mnemo as m
+        from mnemo_bridge.sources.notion.push import NotionWriter
 
         with tempfile.TemporaryDirectory() as tmp:
             path = self.make_package(tmp, notes_blocks)
@@ -350,7 +350,7 @@ class Writer(unittest.TestCase):
             return client, result
 
     def test_page_created_with_title_and_icon(self):
-        from notion2mnemo import mnemo as m
+        from mnemo_bridge import mnemo as m
 
         client, result = self.run_push([m.Block(type=m.TEXT, spans=[m.plain("hello")])])
         self.assertEqual(client.pages[0]["title"], "Note")
@@ -359,7 +359,7 @@ class Writer(unittest.TestCase):
         self.assertEqual(result.blocks_written, 1)
 
     def test_batches_cap_at_one_hundred(self):
-        from notion2mnemo import mnemo as m
+        from mnemo_bridge import mnemo as m
 
         blocks = [m.Block(type=m.TEXT, spans=[m.plain(f"p{i}")]) for i in range(250)]
         client, result = self.run_push(blocks)
@@ -368,7 +368,7 @@ class Writer(unittest.TestCase):
         self.assertEqual(result.blocks_written, 250)
 
     def test_nested_children_are_appended_to_the_created_parent(self):
-        from notion2mnemo import mnemo as m
+        from mnemo_bridge import mnemo as m
 
         bullet = m.Block(type=m.BULLET_LIST, spans=[m.plain("outer")],
                          children=[m.Block(type=m.BULLET_LIST, spans=[m.plain("inner")])])
@@ -379,7 +379,7 @@ class Writer(unittest.TestCase):
         self.assertTrue(parent_of_inner.startswith("block"))
 
     def test_image_is_uploaded_and_attached(self):
-        from notion2mnemo import mnemo as m
+        from mnemo_bridge import mnemo as m
 
         image = m.Block(type=m.IMAGE, spans=[m.plain("cap")],
                         payload=m.image_payload("a" * 32 + ".png", alt="cap"))
@@ -391,7 +391,7 @@ class Writer(unittest.TestCase):
         self.assertEqual(appended["image"]["type"], "file_upload")
 
     def test_table_rides_in_one_request(self):
-        from notion2mnemo import mnemo as m
+        from mnemo_bridge import mnemo as m
 
         cell = lambda t: m.Block(type=m.TABLE_CELL, spans=[m.plain(t)], payload=m.table_cell_payload())
         row = lambda *ts: m.Block(type=m.TABLE_ROW, children=[cell(t) for t in ts])
@@ -407,9 +407,9 @@ class Writer(unittest.TestCase):
         import tempfile
         from pathlib import Path
 
-        from notion2mnemo import mnemo as m
-        from notion2mnemo.package import write_package
-        from notion2mnemo.push import NotionWriter
+        from mnemo_bridge import mnemo as m
+        from mnemo_bridge.package import write_package
+        from mnemo_bridge.sources.notion.push import NotionWriter
 
         parent = m.Note(note_id="n1", title="Parent", blocks=[
             m.Block(type=m.TEXT, spans=[m.plain("before")]),
@@ -436,9 +436,9 @@ class Writer(unittest.TestCase):
         import tempfile
         from pathlib import Path
 
-        from notion2mnemo import mnemo as m
-        from notion2mnemo.package import write_package
-        from notion2mnemo.push import NotionWriter
+        from mnemo_bridge import mnemo as m
+        from mnemo_bridge.package import write_package
+        from mnemo_bridge.sources.notion.push import NotionWriter
 
         note = m.Note(note_id="n1", title="Inside", folder_id="f1",
                       blocks=[m.Block(type=m.TEXT, spans=[m.plain("x")])])

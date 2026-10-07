@@ -17,7 +17,7 @@ $("reload-parents").addEventListener("click", (e) => { e.preventDefault(); loadP
 async function loadParents() {
   placeholder($("parent-list"), "Loading pages");
   state.retry = () => { show("source"); loadParents(); };
-  const result = await api().list_content(token());
+  const result = await api().notion_list_content(token());
   if (result.error) {
     placeholder($("parent-list"), "Nothing loaded.");
     return showError(result.error, "connect");
@@ -73,7 +73,7 @@ $("run-push").addEventListener("click", runPush);
 async function runPush() {
   state.retry = () => { show("push-ready"); runPush(); };
   beginRun("Creating pages", "note");
-  const result = await api().start_push({
+  const result = await api().notion_start_push({
     token: token(),
     package: state.packagePath,
     parent: state.parentId,

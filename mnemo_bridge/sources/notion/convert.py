@@ -13,12 +13,12 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Sequence
 
-from . import mnemo
+from ... import mnemo
 from .assets import AssetStore
 from .colors import ColorMap
 from .convert_layout import LayoutHandlers
 from .convert_links import LinkHandlers
-from .mnemo import Block, InlineSpan, TextSpan, TextStyle, plain
+from ...mnemo import Block, InlineSpan, TextSpan, TextStyle, plain
 from .richtext import block_color_style, convert_rich_text, rich_text_to_plain
 
 #: Notion code language -> Mnemo token. A language missing from Mnemo's picker

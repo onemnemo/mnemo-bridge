@@ -10,7 +10,7 @@ from __future__ import annotations
 from typing import Any, Iterable, Sequence
 
 from .colors import ColorMap
-from .mnemo import EquationSpan, InlineSpan, TextSpan, TextStyle, normalize_spans, plain
+from ...mnemo import EquationSpan, InlineSpan, TextSpan, TextStyle, normalize_spans, plain
 
 
 def _style(annotations: dict[str, Any], colors: ColorMap, link: str | None) -> TextStyle:

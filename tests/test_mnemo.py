@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import unittest
 
-from notion2mnemo import mnemo
-from notion2mnemo.mnemo import (
+from mnemo_bridge import mnemo
+from mnemo_bridge.mnemo import (
     Block,
     EquationSpan,
     Note,
