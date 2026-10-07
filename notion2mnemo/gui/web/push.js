@@ -62,7 +62,7 @@ function updateSourceReady() {
 $("source-continue").addEventListener("click", () => {
   const info = state.packageInfo;
   $("push-summary").textContent =
-    `${cap(plural(info.notes.length, "note"))} become new Notion pages.`;
+    `${cap(plural(info.notes.length, "note"))} to create as Notion pages.`;
   $("push-package-value").textContent = state.packagePath.split(/[\\/]/).pop();
   $("push-parent-value").textContent = state.parentTitle;
   show("push-ready");

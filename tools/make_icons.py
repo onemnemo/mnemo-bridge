@@ -18,8 +18,8 @@ OUT = ROOT / "assets"
 SIZE = 1024
 SCALE = 4
 
-TOP = (242, 116, 66)
-BOTTOM = (196, 66, 22)
+TOP = (60, 151, 248)
+BOTTOM = (7, 115, 209)
 GLYPH = (255, 255, 255)
 
 
@@ -68,7 +68,7 @@ def draw(size: int = SIZE, *, margin: float = 0.06) -> Image.Image:
 
     # A faint shadow keeps the arrows readable against the lighter top edge.
     shadow = glyph.split()[3].filter(ImageFilter.GaussianBlur(big * 0.012))
-    shadow_layer = Image.new("RGBA", (big, big), (120, 40, 10, 0))
+    shadow_layer = Image.new("RGBA", (big, big), (0, 45, 100, 0))
     shadow_layer.putalpha(shadow.point(lambda a: a * 0.35))
     shadow_layer = shadow_layer.transform(
         shadow_layer.size, Image.AFFINE, (1, 0, 0, 0, 1, -big * 0.008)

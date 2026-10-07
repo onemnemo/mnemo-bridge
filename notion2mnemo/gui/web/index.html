@@ -34,21 +34,20 @@
       <div class="body">
         <div class="head">
           <h1>Convert notes</h1>
-          <p class="lede">Move pages between Notion and Mnemo with their formatting.</p>
         </div>
         <div class="choices" role="radiogroup" aria-label="Direction">
           <button class="choice selected" id="dir-pull" aria-pressed="true">
             <span class="choice-radio"></span>
             <span class="choice-text">
               <span class="choice-title">Notion to Mnemo</span>
-              <span class="choice-note">Export Notion pages to a file you import in Mnemo.</span>
+              <span class="choice-note">Makes a file you import in Mnemo.</span>
             </span>
           </button>
           <button class="choice" id="dir-push" aria-pressed="false">
             <span class="choice-radio"></span>
             <span class="choice-text">
               <span class="choice-title">Mnemo to Notion</span>
-              <span class="choice-note">Create Notion pages from a Mnemo export.</span>
+              <span class="choice-note">Makes Notion pages from a Mnemo export.</span>
             </span>
           </button>
         </div>
@@ -91,7 +90,7 @@
       <div class="body">
         <div class="head">
           <h1>Connect to Notion</h1>
-          <p class="lede">The converter reads Notion through an integration key. You only set this up once.</p>
+          <p class="lede">You only do this once.</p>
         </div>
 
         <ol class="steps">
@@ -103,7 +102,7 @@
           <li>
             <span class="num">2</span>
             <span>In Notion, open each page you want to move and add the integration under
-              <strong>⋯ &gt; Connections</strong>. Pages inside it are included.</span>
+              <strong>⋯&nbsp;&gt;&nbsp;Connections</strong>.</span>
           </li>
         </ol>
 
@@ -115,7 +114,7 @@
         </div>
       </div>
       <footer class="actionbar">
-        <span class="foot-note">The key is only ever sent to Notion.</span>
+        <span class="foot-note">The key is only sent to Notion.</span>
         <span class="spacer"></span>
         <button class="btn" data-go="start">Back</button>
         <button class="btn primary" id="connect-continue">Continue</button>
@@ -126,7 +125,7 @@
       <div class="body listing">
         <div class="head">
           <h1>Choose pages</h1>
-          <p class="lede">Pages inside the ones you choose are included.</p>
+          <p class="lede">Sub-pages are included.</p>
         </div>
         <div class="list-bar">
           <label class="check"><input type="checkbox" id="select-all" checked> All top-level pages</label>
@@ -135,7 +134,7 @@
           <input type="search" id="filter" class="input search" placeholder="Filter">
         </div>
         <ul class="items" id="page-list"></ul>
-        <p class="hint">Missing a page? Add the integration to it in Notion under <strong>⋯ &gt; Connections</strong>.
+        <p class="hint">Missing a page? Add the integration to it in Notion under <strong>⋯&nbsp;&gt;&nbsp;Connections</strong>.
           <a href="#" id="reload-pages">Refresh</a></p>
       </div>
       <footer class="actionbar">
@@ -189,7 +188,7 @@
         </details>
       </div>
       <footer class="actionbar">
-        <span class="foot-note">Notion allows a few requests a second, so large workspaces take a few minutes.</span>
+        <span class="foot-note">Large workspaces take a few minutes.</span>
         <span class="spacer"></span>
         <button class="btn" data-go="pages">Back</button>
         <button class="btn primary" id="run-pull">Export</button>
@@ -249,12 +248,12 @@
           <label class="prow toggle">
             <input type="checkbox" id="opt-upload-images" checked>
             <span class="prow-flex">Upload images</span>
-            <span class="dim">Otherwise they are left out</span>
+            <span class="dim">Otherwise they are skipped</span>
           </label>
         </div>
       </div>
       <footer class="actionbar">
-        <span class="foot-note">Only new pages are created. Nothing in Notion is changed.</span>
+        <span class="foot-note">Existing Notion pages are left alone.</span>
         <span class="spacer"></span>
         <button class="btn" data-go="source">Back</button>
         <button class="btn primary" id="run-push">Create pages</button>

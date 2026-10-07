@@ -76,7 +76,7 @@ function updateCount() {
 $("pages-continue").addEventListener("click", () => {
   const n = state.selected.size;
   $("ready-summary").textContent =
-    `${cap(plural(n, "page"))} and the pages inside them.`;
+    `${cap(plural(n, "page"))} with their sub-pages.`;
   show("ready");
 });
 

@@ -106,7 +106,7 @@ window.appDone = function (result) {
     $("next-title").textContent = "Find them in Notion";
     setSteps([
       `Open <strong>${escapeHtml(state.parentTitle)}</strong> in Notion.`,
-      "The notes are new pages inside it.",
+      "The notes are pages inside it.",
     ]);
     $("open-folder").hidden = true;
   }

@@ -113,7 +113,7 @@ function persistToken() {
 $("connect-continue").addEventListener("click", () => {
   if (!token()) {
     $("token").focus();
-    return showError({ title: "Paste your integration key first.", checks: [] }, "connect");
+    return showError({ title: "Paste the integration secret first.", checks: [] }, "connect");
   }
   persistToken();
   // A different key sees a different workspace, so refetch when the key changes.
