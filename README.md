@@ -7,8 +7,8 @@ Mnemo Bridge handles conversions that require API access rather than a file-base
 **Supported integrations:** [Notion](https://www.notion.so) (bidirectional). More integrations are planned.
 
 <p align="center">
+  <img src="docs/screenshots/start.png" alt="The start screen, choosing Notion to Mnemo or Mnemo to Notion" width="49%">
   <img src="docs/screenshots/choose-pages.png" alt="Choosing Notion pages to export" width="49%">
-  <img src="docs/screenshots/exported.png" alt="A finished export with the steps to import it in Mnemo" width="49%">
 </p>
 
 ## Download
